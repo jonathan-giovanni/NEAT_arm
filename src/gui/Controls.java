@@ -20,8 +20,8 @@ public class Controls {
             color( 250, 250, 250, 120 ),//outlineHighlight   ok
             color( 150, 150, 150, 150 ),//fill               ok
             color( 255, 255, 255, 250 ),//fillHighlight      ok
-            color( 160, 160, 160, 60 ));//overlay           ok
-    
+            color( 100, 100, 100, 25 ));//overlay           ok
+
     public Controls(PApplet p,int w,int h){
         this.pApplet = p;
         ui = PUI.init(this.pApplet).size(w,h);
