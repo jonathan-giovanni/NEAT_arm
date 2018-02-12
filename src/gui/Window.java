@@ -2,48 +2,60 @@ package gui;
 
 import arm.Arm;
 import com.martinleopold.pui.Button;
+import kinematic.Ik;
 import processing.core.PApplet;
 import processing.core.PShape;
 import processing.core.PVector;
 
+import java.util.Scanner;
+
 
 public class Window extends PApplet {
 
-    Arm genericArm;
 
+    //input by the user
+    Scanner scanner = new Scanner( System.in );
+
+    //arm 3d
+    Arm genericArm;
+    //inverse kinematic
+    Ik ik;
+    //graphical user interface
     Controls controls;
     PShape grid;
     int maxX = 200;
     PVector gridPos = new PVector(0, 0, 0);
 
-    PShape apoyo, base, brazo1, brazo2, end;
-    float rotX, rotY;
-    float posX = 1, posY = 90, posZ = 50;
+    double posX = 1, posY = 60, posZ = 60;
     float alpha, beta, gamma;
     PVector origin;
 
-
-    float[] Xsphere = new float[99];
-    float[] Ysphere = new float[99];
-    float[] Zsphere = new float[99];
 
     @Override
     public void settings() {
         size(1280, 800, P3D);
         //fullScreen(P3D);
         origin = new PVector(width / 2, height / 2);
+
     }
 
     @Override
     public void setup() {
+        //surface.setResizable(true);
         genericArm  = new Arm(this);
         //colorMode(HSB, 100, 100, 100, 100);
         //frameRate(60);
         controls = new Controls(this, 500, height);
+
+        ik = new Ik(genericArm.getF(),genericArm.getT());
+        IkToArm(posX,posY,posZ);
     }
 
     @Override
     public void draw() {
+
+
+
 
 
         hint(ENABLE_DEPTH_TEST);
@@ -52,66 +64,61 @@ public class Window extends PApplet {
         lights();
         directionalLight(51, 102, 126, -1, 0, 0);
 
+        drawAxis();
         genericArm.drawArm();
-
-
-
     }
 
     private void drawAxis() {
         translate(0, 0, 0);
         stroke(0, 0, 250);
-        line(0, origin.y, width, origin.y);// y
+        line(0, origin.y, width, origin.y);//azul y
         stroke(250, 0, 0);
-        line(origin.x, 0, origin.x, height);//x
+        line(origin.x, 0, origin.x, height);//rojo x
         stroke(0, 250, 0);
-        line(-origin.x, height, origin.x, origin.y);//z
+        line(-origin.x, height, origin.x, origin.y);//verde z
         line(origin.x, origin.y, width * 2, -origin.y);//z
     }
 
     public void keyPressed() {
         switch (key) {
+            case 'w':
+                posY++;
+                break;
+            case 's':
+                posY--;
+                break;
+            case 'a':
+                posX--;
+                break;
+            case 'd':
+                posX++;
+                break;
+            case 'r':
+                posZ--;
+                break;
+            case 'f':
+                posZ++;
+                break;
             case ' ':
                 controls.ui.toggle();
                 break;
             case 'g':
                 controls.ui.toggleGrid();
                 break;
+            case 'i':
+                System.out.print( "Pos x: " );
+                posX = scanner.nextDouble();
+                System.out.print( "Pos y: " );
+                posY = scanner.nextDouble();
+                System.out.print( "Pos z: " );
+                posZ = scanner.nextDouble();
+                break;
         }
+        IkToArm(posX,posY,posZ);
     }
 
     void buttonClick(Button b) {
         println("clicked " + b.getId());
-    }
-
-    float F = 50;
-    float T = 70;
-    float millisOld, gTime, gSpeed = 8;
-
-    void IK() {
-        float X = posX;
-        float Y = posY;
-        float Z = posZ;
-        float L = (float) Math.sqrt(Y * Y + X * X);
-        float dia = (float) Math.sqrt(Z * Z + L * L);
-
-        alpha = (float) (Math.PI / 2 - (Math.atan2(L, Z) + Math.acos((T * T - F * F - dia * dia) / (-2 * F * dia))));
-        beta = (float) (-Math.PI + Math.acos((dia * dia - T * T - F * F) / (-2 * F * T)));
-        gamma = (float) Math.atan2(Y, X);
-
-    }
-
-    void setTime() {
-        gTime += ((float) millis() / 1000 - millisOld) * (gSpeed / 4);
-        if (gTime >= 4) gTime = 0;
-        millisOld = (float) millis() / 1000;
-    }
-
-    void writePos() {
-        IK();
-        setTime();
-        posX = (float) (Math.sin(gTime * Math.PI / 2) * 20);
-        posZ = (float) (Math.sin(gTime * Math.PI) * 10);
     }
 
     public void mouseDragged() {
@@ -147,6 +154,25 @@ public class Window extends PApplet {
                 popMatrix();
             }
         }
-
     }
+
+    private void IkToArm(double x,double y,double z){
+
+        System.out.println( "Pos X : " + x);
+        System.out.println( "Pos Y : " + y);
+        System.out.println( "Pos Z : " + z);
+
+        double angles[] = ik.evaluate(x,y,z);
+
+
+        genericArm.drawArm(angles[0],angles[1],angles[2]);
+
+        // 4. Now, you can do anything with the input string that you need to.
+        // Like, output it to the user.
+        System.out.println( "alpha : " + angles[0]);
+        System.out.println( "beta  : " + angles[1]);
+        System.out.println( "gamma : " + angles[2]);
+    }
+
+
 }
